@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>crate.png</file>
+        <file>Aldranor.frag</file>
+        <file>Aldranor.vert</file>
+    </qresource>
+</RCC>
