@@ -20,8 +20,9 @@ Aldranor_viewer::Aldranor_viewer()
 
    //  Select shader
    QComboBox* shader = new QComboBox();
-   shader->addItem("fixed pipeline");
-   shader->addItem("Programmable Pipeline");
+   shader->addItem("None");
+   shader->addItem("Default");
+   shader->addItem("Terrain");
 
    //  Select projection
    QComboBox* projection = new QComboBox();

@@ -3,5 +3,7 @@
         <file>crate.png</file>
         <file>Aldranor.frag</file>
         <file>Aldranor.vert</file>
+        <file>terrain.frag</file>
+        <file>terrain.vert</file>
     </qresource>
 </RCC>

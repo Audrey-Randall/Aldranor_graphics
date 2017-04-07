@@ -11,6 +11,48 @@ Aldranor_opengl::Aldranor_opengl(QWidget* parent)
 {
 }
 
+void Aldranor_opengl::fillPlaneData(){
+    float color[] = {1.0,1.0,1.0};
+    float segsize = 2.0/PLANE_SEGS;
+    int x = 0;
+    int y = 0;
+    for(float i = -1; i < 1; i += segsize){
+        for(float j = -1; j < 1; j += segsize) {
+            //data for this mini plane starts at x*y*12*6
+            int start = x*y*12*6;
+
+            //Aaaagh there must be an easier way
+            plane_data[start] = i;
+            plane_data[start+1] = j;
+            plane_data[start+12] = i+segsize;
+            plane_data[start+13] = j+segsize;
+            plane_data[start+24] = i+segsize;
+            plane_data[start+25] = j;
+            plane_data[start+36] = i;
+            plane_data[start+37] = j;
+            plane_data[start+48] = i;
+            plane_data[start+49] = j+segsize;
+            plane_data[start+60] = i+segsize;
+            plane_data[start+61] = j+segsize;
+
+            for(int k = start; k < start+72; k+=12){
+                plane_data[k+2] = 0;
+                plane_data[k+3] = 1;
+                plane_data[k+4] = 0;
+                plane_data[k+5] = 0;
+                plane_data[k+6] = 1;
+                plane_data[k+7] = color[0];
+                plane_data[k+8] = color[1];
+                plane_data[k+9] = color[2];
+                plane_data[k+10] = plane_data[k];
+                plane_data[k+11] = plane_data[k+1];
+            }
+            y++;
+        }
+        x++;
+    }
+}
+
 //
 //  Cube Vertexes
 //
@@ -80,6 +122,7 @@ void Aldranor_opengl::initializeGL()
 
    //  Load shaders
    addShader(":/Aldranor.vert",":/Aldranor.frag");
+   addShader(":/terrain.vert", ":/terrain.frag");
 
    //  Cube vertex buffer object
    //  Copy data to vertex buffer object
@@ -90,6 +133,14 @@ void Aldranor_opengl::initializeGL()
    cube_buffer.write(0,cube_data,sizeof(cube_data));
    //  Unbind this buffer
    cube_buffer.release();
+
+   //Plane vertex buffer object
+   plane_buffer.create();
+   plane_buffer.bind();
+   plane_buffer.setUsagePattern(QGLBuffer::StaticDraw);
+   plane_buffer.allocate(sizeof(plane_data));
+   plane_buffer.write(0,plane_data,sizeof(plane_data));
+   plane_buffer.release();
 }
 
 //
