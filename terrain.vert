@@ -1,52 +1,60 @@
-//Bump map vert shader
-uniform sampler2D mapTex;
-varying float h;
-varying vec4 v;
+#version 420 core
 
-vec4 phong()
+//  Transformation matrices
+uniform mat4 ModelViewMatrix;
+uniform mat4 ProjectionMatrix;
+uniform mat4 LightSource;
+
+//  Vertex attributes (input)
+layout(location = 0) in vec4 Vertex;
+layout(location = 1) in vec3 iNormal;
+layout(location = 2) in vec3 Color;
+layout(location = 3) in vec2 iTexCoords;
+layout(binding = 1) uniform sampler2D terrainTex;
+
+//  Output to next shader
+out vec3 FrontColor;
+out vec3 View;
+out vec3 Light;
+out vec3 oNormal;
+out vec4 Ambient;
+out vec2 oTexCoords;
+out float height;
+
+void newmain()
 {
-   //  P is the vertex coordinate on body
-   vec3 P = vec3(gl_ModelViewMatrix * gl_Vertex);
-   //  N is the object normal at P
-   vec3 N = normalize(gl_NormalMatrix * gl_Normal);
-   //  Light Position for light 0
-   vec3 LightPos = vec3(gl_LightSource[0].position);
-   //  L is the light vector
-   vec3 L = normalize(LightPos - P);
-
-   //  Emission and ambient color
-   vec4 color = gl_FrontMaterial.emission + gl_FrontLightProduct[0].ambient + gl_LightModel.ambient*gl_FrontMaterial.ambient;
-
-   //  Diffuse light intensity is cosine of light and normal vectors
-   float Id = dot(L,N);
-   if (Id>0.0)
-   {
-      //  Add diffuse
-      color += Id*gl_FrontLightProduct[0].diffuse;
-      //  R is the reflected light vector R = 2(L.N)N - L
-      vec3 R = reflect(-L, N);
-      //  V is the view vector (eye at the origin)
-      vec3 V = normalize(-P);
-      //  Specular is cosine of reflected and view vectors
-      float Is = dot(R,V);
-      if (Is>0.0) color += pow(Is,gl_FrontMaterial.shininess)*gl_FrontLightProduct[0].specular;
-   }
-
-   //  Return sum of color components
-   return color;
+   //  Pass colors to fragment shader (will be interpolated)
+   FrontColor = Color;
+   //  Set transformed vertex location
+   gl_Position =  ProjectionMatrix * ModelViewMatrix * Vertex;
 }
 
-void main()
-{
-   //  Vertex color
-   gl_FrontColor = phong();
 
-   //  Texture coordinate
-   gl_TexCoord[0] = gl_Vertex;
-   v = gl_Vertex.xyzw;
-   v.z = texture2D(mapTex, gl_TexCoord[0].xy).z;
-   h = v.z;
+void main(){
+    //
+    //  Lighting values needed by fragment shader
+    //
+    //  Vertex location in modelview coordinates
+    vec3 P = vec3(ModelViewMatrix * Vertex).xyz;
+    //  Light position
+    Light  = vec3(LightSource[3].xyz) - P;
+    //  Normal
+    oNormal = vec3(transpose(inverse(ModelViewMatrix)) * vec4(iNormal.x, iNormal.y, iNormal.z, 1.0)).xyz;
+    //  Eye position
+    View  = -P;
+    //  Ambient color
+    //  Material emission + light(???)*mat color + mat.ambient*light.ambient
+    //  Roughly speaking: gl_FrontLightProduct[i] == gl_FrontMaterial * gl_LightSource[i]
+    //Ambient = gl_FrontMaterial.emission + gl_FrontLightProduct[0].ambient + gl_LightModel.ambient*gl_FrontMaterial.ambient;
+    Ambient = vec4(0,0,0,1) + LightSource[0].xyzw;
 
-   //  Return fixed transform coordinates for this vertex
-   gl_Position = gl_ModelViewProjectionMatrix * v;
+    //  Texture coordinate for fragment shader
+    oTexCoords = iTexCoords; //gl_MultiTexCoord0;
+
+    vec4 v = Vertex.xyzw;
+    v.z = texture2D(terrainTex, iTexCoords.xy).z;
+    height = v.z;
+
+    //  Set vertex position
+    gl_Position = ProjectionMatrix * ModelViewMatrix * v;
 }

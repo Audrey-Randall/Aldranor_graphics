@@ -7,6 +7,7 @@
 
 #include "CUgl.h"
 #include <QMatrix4x4>
+#include <iostream>
 
 //Segments on a side of a plane: the plane is composed of PLANE_SEGS * PLANE_SEGS quads
 //Except each quad is 2 triangles
@@ -30,6 +31,7 @@ protected:
    void initializeGL();  //  Initialize widget
    void paintGL();       //  Draw widget
    void doProjection();  //  Projection
+   void fillPlaneData(); //  Fill array of plane data
 };
 
 #endif

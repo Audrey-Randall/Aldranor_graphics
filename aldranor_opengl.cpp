@@ -11,6 +11,7 @@ Aldranor_opengl::Aldranor_opengl(QWidget* parent)
 {
 }
 
+const int plane_size = PLANE_SEGS*PLANE_SEGS*6;
 void Aldranor_opengl::fillPlaneData(){
     float color[] = {1.0,1.0,1.0};
     float segsize = 2.0/PLANE_SEGS;
@@ -19,7 +20,8 @@ void Aldranor_opengl::fillPlaneData(){
     for(float i = -1; i < 1; i += segsize){
         for(float j = -1; j < 1; j += segsize) {
             //data for this mini plane starts at x*y*12*6
-            int start = x*y*12*6;
+            int start = (x*PLANE_SEGS+y)*12*6;
+            //std::cout<<"Start is "<<start<<std::endl;
 
             //Aaaagh there must be an easier way
             plane_data[start] = i;
@@ -41,14 +43,15 @@ void Aldranor_opengl::fillPlaneData(){
                 plane_data[k+4] = 0;
                 plane_data[k+5] = 0;
                 plane_data[k+6] = 1;
-                plane_data[k+7] = color[0];
-                plane_data[k+8] = color[1];
-                plane_data[k+9] = color[2];
-                plane_data[k+10] = plane_data[k];
-                plane_data[k+11] = plane_data[k+1];
+                plane_data[k+7] = 1.0;
+                plane_data[k+8] = 1.0;
+                plane_data[k+9] = 1.0;
+                plane_data[k+10] = (plane_data[k]+1)/2;
+                plane_data[k+11] = (plane_data[k+1]+1)/2;
             }
             y++;
         }
+        y=0;
         x++;
     }
 }
@@ -112,6 +115,9 @@ void Aldranor_opengl::initializeGL()
    //Set up for textures
    glf = new QGLFunctions(QGLContext::currentContext());
 
+   //Fill plane data
+   fillPlaneData();
+
    // Textures
    QPixmap crate(":/crate.png");
    glf->glActiveTexture(GL_TEXTURE0);
@@ -170,7 +176,8 @@ void Aldranor_opengl::paintGL()
    {
       //  Enable textures
       glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D,cube_tex);
+      glf->glActiveTexture(GL_TEXTURE1); //necessary?
+      glBindTexture(GL_TEXTURE_2D,terrain_tex);
 
       //  Enabe arrays
       glEnableClientState(GL_VERTEX_ARRAY);
@@ -180,13 +187,13 @@ void Aldranor_opengl::paintGL()
 
       //  Set pointers
       
-      glVertexPointer  (4,GL_FLOAT,12*sizeof(GLfloat),cube_data);
-      glNormalPointer  (  GL_FLOAT,12*sizeof(GLfloat),cube_data+4);
-      glColorPointer   (3,GL_FLOAT,12*sizeof(GLfloat),cube_data+7);
-      glTexCoordPointer(2,GL_FLOAT,12*sizeof(GLfloat),cube_data+10);
+      glVertexPointer  (4,GL_FLOAT,12*sizeof(GLfloat),plane_data);
+      glNormalPointer  (  GL_FLOAT,12*sizeof(GLfloat),plane_data+4);
+      glColorPointer   (3,GL_FLOAT,12*sizeof(GLfloat),plane_data+7);
+      glTexCoordPointer(2,GL_FLOAT,12*sizeof(GLfloat),plane_data+10);
 
-      //  Draw the cube
-      glDrawArrays(GL_TRIANGLES,0,cube_size);
+      //  Draw the cube, or plane.
+      glDrawArrays(GL_TRIANGLES,0,plane_size);
 
       //  Disable arrays
       glDisableClientState(GL_VERTEX_ARRAY);
@@ -201,6 +208,8 @@ void Aldranor_opengl::paintGL()
    //  OpenGL 4 style shaders
    else
    {
+      glf->glActiveTexture(GL_TEXTURE1); //necessary?
+      glBindTexture(GL_TEXTURE_2D,terrain_tex); //neeeecesssaaaarrrry???
       //  Create Modelview matrix, initialized to identity
       QMatrix4x4 mv;
       if (fov) mv.translate(0,0,-2*dim);
@@ -214,8 +223,8 @@ void Aldranor_opengl::paintGL()
       shader[mode]->setUniformValue("ModelViewMatrix",mv);
       shader[mode]->setUniformValue("LightSource", lsMat);
 
-      //  Select cube buffer
-      cube_buffer.bind();
+      //  Select plane buffer
+      plane_buffer.bind();
       //   Attribute 0: vertex coordinate (vec4) at offset 0
       shader[mode]->enableAttributeArray(0);
       shader[mode]->setAttributeBuffer(0,GL_FLOAT,0,4,12*sizeof(float));
@@ -229,15 +238,15 @@ void Aldranor_opengl::paintGL()
       shader[mode]->enableAttributeArray(3);
       shader[mode]->setAttributeBuffer(3,GL_FLOAT,10*sizeof(float),2,12*sizeof(float));
 
-      // Draw the cube
-      glDrawArrays(GL_TRIANGLES,0,cube_size);
+      // Draw the cube or plane
+      glDrawArrays(GL_TRIANGLES,0,plane_size);
 
       //  Disable vertex arrays
       shader[mode]->disableAttributeArray(0);
       shader[mode]->disableAttributeArray(1);
 
       //  Unbind this buffer
-      cube_buffer.release();
+      plane_buffer.release();
 
       // Back to fixed pipeline
       shader[mode]->release();

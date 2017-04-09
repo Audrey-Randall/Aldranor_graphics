@@ -5,5 +5,6 @@
         <file>Aldranor.vert</file>
         <file>terrain.frag</file>
         <file>terrain.vert</file>
+        <file>map2.png</file>
     </qresource>
 </RCC>
