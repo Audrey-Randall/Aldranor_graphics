@@ -6,5 +6,6 @@
         <file>terrain.frag</file>
         <file>terrain.vert</file>
         <file>map2.png</file>
+        <file>terrain_will.jpg</file>
     </qresource>
 </RCC>

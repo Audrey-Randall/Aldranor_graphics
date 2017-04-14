@@ -39,7 +39,7 @@ protected:
    float            asp;      // Sceen aspect ratio
    int              th,ph;    // Display angles
    int              mode;     // Selected shader
-   QVector<QGLShaderProgram*> shader; // Shaders
+   QVector<QOpenGLShaderProgram*> shader; // Shaders
 public:
    CUgl(QWidget* parent=0,bool fixed=true);        // Constructor
    QSize sizeHint() const {return QSize(400,400);} // Default size of widget
@@ -48,6 +48,7 @@ public slots:
    void setPerspective(int on);                     // Set perspective
    void setShader(int sel);                         // Set shader
    void addShader(QString vert,QString frag);       // Add shader
+   void addShader5(QString vert,QString tcs, QString tes, QString geom, QString frag);  // Add full-pipeline shader
    void setObject(int type);                        // Set displayed object
    void addObject(Object* obj);                     // Add object
    void doScene();                                  // Draw scene

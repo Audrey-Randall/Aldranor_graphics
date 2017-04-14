@@ -11,7 +11,7 @@
 
 //Segments on a side of a plane: the plane is composed of PLANE_SEGS * PLANE_SEGS quads
 //Except each quad is 2 triangles
-#define PLANE_SEGS 20
+#define PLANE_SEGS 60
 
 class Aldranor_opengl : public CUgl
 {

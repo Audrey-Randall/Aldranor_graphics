@@ -21,14 +21,6 @@ out vec4 Ambient;
 out vec2 oTexCoords;
 out float height;
 
-void newmain()
-{
-   //  Pass colors to fragment shader (will be interpolated)
-   FrontColor = Color;
-   //  Set transformed vertex location
-   gl_Position =  ProjectionMatrix * ModelViewMatrix * Vertex;
-}
-
 
 void main(){
     //
@@ -39,7 +31,7 @@ void main(){
     //  Light position
     Light  = vec3(LightSource[3].xyz) - P;
     //  Normal
-    oNormal = vec3(transpose(inverse(ModelViewMatrix)) * vec4(iNormal.x, iNormal.y, iNormal.z, 1.0)).xyz;
+    //oNormal = vec3(transpose(inverse(ModelViewMatrix)) * vec4(iNormal.x, iNormal.y, iNormal.z, 1.0)).xyz;
     //  Eye position
     View  = -P;
     //  Ambient color
@@ -52,7 +44,7 @@ void main(){
     oTexCoords = iTexCoords; //gl_MultiTexCoord0;
 
     vec4 v = Vertex.xyzw;
-    v.z = texture2D(terrainTex, iTexCoords.xy).z;
+    v.z = -1.0*(texture2D(terrainTex, iTexCoords.xy).z) + 1.0;
     height = v.z;
 
     //  Set vertex position

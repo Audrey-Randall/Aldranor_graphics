@@ -122,13 +122,13 @@ void Aldranor_opengl::initializeGL()
    QPixmap crate(":/crate.png");
    glf->glActiveTexture(GL_TEXTURE0);
    cube_tex = bindTexture(crate,GL_TEXTURE_2D);
-   QPixmap terrain(":/map2.png");
+   QPixmap terrain(":/terrain_will.jpg");
    glf->glActiveTexture(GL_TEXTURE1);
    terrain_tex = bindTexture(terrain, GL_TEXTURE_2D);
 
    //  Load shaders
    addShader(":/Aldranor.vert",":/Aldranor.frag");
-   addShader(":/terrain.vert", ":/terrain.frag");
+   //addShader5(":/terrain.vert", ":/terrain.tcs", ":/terrain.tes", ":/terrain.geom" ":/terrain.frag");
 
    //  Cube vertex buffer object
    //  Copy data to vertex buffer object
@@ -193,7 +193,11 @@ void Aldranor_opengl::paintGL()
       glTexCoordPointer(2,GL_FLOAT,12*sizeof(GLfloat),plane_data+10);
 
       //  Draw the cube, or plane.
+      glPushMatrix();
+      glRotated(90, 1,0,0);
+      glScaled(10,1,10);
       glDrawArrays(GL_TRIANGLES,0,plane_size);
+      glPopMatrix();
 
       //  Disable arrays
       glDisableClientState(GL_VERTEX_ARRAY);
@@ -215,6 +219,9 @@ void Aldranor_opengl::paintGL()
       if (fov) mv.translate(0,0,-2*dim);
       mv.rotate(ph,1,0,0);
       mv.rotate(th,0,1,0);
+      //for plane
+      mv.rotate(90, 1,0,0);
+      mv.scale(5,5,5);
 
       // Enable shader
       shader[mode]->bind();
@@ -222,6 +229,7 @@ void Aldranor_opengl::paintGL()
       shader[mode]->setUniformValue("ProjectionMatrix",proj);
       shader[mode]->setUniformValue("ModelViewMatrix",mv);
       shader[mode]->setUniformValue("LightSource", lsMat);
+      shader[mode]->setUniformValue("Segments", PLANE_SEGS);
 
       //  Select plane buffer
       plane_buffer.bind();
@@ -238,8 +246,12 @@ void Aldranor_opengl::paintGL()
       shader[mode]->enableAttributeArray(3);
       shader[mode]->setAttributeBuffer(3,GL_FLOAT,10*sizeof(float),2,12*sizeof(float));
 
-      // Draw the cube or plane
+      //  Draw the cube, or plane.
+      glPushMatrix();
+      glRotated(90, 1,0,0);
+      glScaled(10,1,10);
       glDrawArrays(GL_TRIANGLES,0,plane_size);
+      glPopMatrix();
 
       //  Disable vertex arrays
       shader[mode]->disableAttributeArray(0);

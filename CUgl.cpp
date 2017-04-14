@@ -374,12 +374,41 @@ void CUgl::wheelEvent(QWheelEvent* e)
 //
 void CUgl::addShader(QString vert,QString frag)
 {
-   QGLShaderProgram* prog = new QGLShaderProgram;
+   QOpenGLShaderProgram* prog = new QOpenGLShaderProgram;
    //  Vertex shader
-   if (vert.length() && !prog->addShaderFromSourceFile(QGLShader::Vertex,vert))
+   if (vert.length() && !prog->addShaderFromSourceFile(QOpenGLShader::Vertex,vert))
       Fatal("Error compiling "+vert+"\n"+prog->log());
    //  Fragment shader
-   if (frag.length() && !prog->addShaderFromSourceFile(QGLShader::Fragment,frag))
+   if (frag.length() && !prog->addShaderFromSourceFile(QOpenGLShader::Fragment,frag))
+      Fatal("Error compiling "+frag+"\n"+prog->log());
+   //  Link
+   if (!prog->link())
+      Fatal("Error linking shader\n"+prog->log());
+   //  Push onto stack
+   else
+      shader.push_back(prog);
+}
+
+//
+//  Load shader program with vertex, tesselation, geometry, and fragment shaders
+//
+void CUgl::addShader5(QString vert,QString tcs, QString tes, QString geom, QString frag)
+{
+   QOpenGLShaderProgram* prog = new QOpenGLShaderProgram;
+   //  Vertex shader
+   if (vert.length() && !prog->addShaderFromSourceFile(QOpenGLShader::Vertex,vert))
+      Fatal("Error compiling "+vert+"\n"+prog->log());
+   //Tesselation compute shader
+   if (tcs.length() && !prog->addShaderFromSourceFile(QOpenGLShader::TessellationControl,tcs))
+      Fatal("Error compiling "+tcs+"\n"+prog->log());
+   //Tesselation evaluation shader
+   if (tes.length() && !prog->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation,tes))
+      Fatal("Error compiling "+tes+"\n"+prog->log());
+   //Geometry shader
+   if (geom.length() && !prog->addShaderFromSourceFile(QOpenGLShader::Geometry,geom))
+      Fatal("Error compiling "+geom+"\n"+prog->log());
+   //  Fragment shader
+   if (frag.length() && !prog->addShaderFromSourceFile(QOpenGLShader::Fragment,frag))
       Fatal("Error compiling "+frag+"\n"+prog->log());
    //  Link
    if (!prog->link())
