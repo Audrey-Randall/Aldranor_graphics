@@ -223,11 +223,11 @@ int CreateShaderProgTess(void)
    //  Create program
    int prog = glCreateProgram();
    //  Compile shaders
-   CreateShader(prog,GL_VERTEX_SHADER         ,"terrain.vert");
-   CreateShader(prog,GL_TESS_CONTROL_SHADER   ,"terrain.tcs");
-   CreateShader(prog,GL_TESS_EVALUATION_SHADER,"terrain.tes");
-   CreateShader(prog,GL_GEOMETRY_SHADER       ,"terrain.geom");
-   CreateShader(prog,GL_FRAGMENT_SHADER       ,"terrain.frag");
+   CreateShader(prog,GL_VERTEX_SHADER         ,"geodesic.vert");
+   CreateShader(prog,GL_TESS_CONTROL_SHADER   ,"geodesic.tcs");
+   CreateShader(prog,GL_TESS_EVALUATION_SHADER,"geodesic.tes");
+   CreateShader(prog,GL_GEOMETRY_SHADER       ,"geodesic.geom");
+   CreateShader(prog,GL_FRAGMENT_SHADER       ,"geodesic.frag");
    //  Associate Position with VBO
    glBindAttribLocation(prog,Position,"Position");
    //  Link program
