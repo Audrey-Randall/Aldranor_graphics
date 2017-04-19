@@ -6,17 +6,17 @@ all: $(EXE)
 
 #  MinGW
 ifeq "$(OS)" "Windows_NT"
-CFLG=-O3 -Wall -DUSEGLEW
+CFLG= -Wall -DUSEGLEW
 LIBS=-lglew32 -lglut32cu -lglu32 -lopengl32
-CLEAN=del *.exe *.o *.a
+CLEAN=rm -f $(EXE) *.o *.a *.exe #del *.exe *.o *.a
 else
 #  OSX
 ifeq "$(shell uname)" "Darwin"
-CFLG=-O3 -Wall -Wno-deprecated-declarations
+CFLG=-Wall -Wno-deprecated-declarations
 LIBS=-framework GLUT -framework OpenGL
 #  Linux/Unix/Solaris
 else
-CFLG=-O3 -Wall
+CFLG=-Wall
 LIBS=-lglut -lGLU -lGL -lm
 endif
 #  OSX/Linux/Unix/Solaris
@@ -48,7 +48,7 @@ CSCIx239.a:fatal.o loadtexbmp.o print.o project.o errcheck.o object.o fps.o elap
 
 #  Link
 ex21:ex21.o CSCIx239.a
-	gcc -O3 -o $@ $^   $(LIBS)
+	gcc -o $@ $^   $(LIBS)
 
 #  Clean
 clean:

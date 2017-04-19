@@ -10,18 +10,30 @@ static char* ReadText(const char *file)
 {
    int   n;
    char* buffer;
+   int read;
    //  Open file
    FILE* f = fopen(file,"rt");
    if (!f) Fatal("Cannot open text file %s\n",file);
    //  Seek to end to determine size, then rewind
    fseek(f,0,SEEK_END);
    n = ftell(f);
-   rewind(f);
+   //rewind(f);
+   fseek(f, 0L, SEEK_SET);
+   printf("FIRST: feof is %d, ferr is %d\n", feof(f), ferror(f));
+   //fflush(stdout);
    //  Allocate memory for the whole file
    buffer = (char*)malloc(n+1);
    if (!buffer) Fatal("Cannot allocate %d bytes for text file %s\n",n+1,file);
    //  Snarf the file
-   if (fread(buffer,n,1,f)!=1) Fatal("Cannot read %d bytes for text file %s\n",n,file);
+   fseek(f, 0L, SEEK_SET);
+   printf("ftell = %d, feof = %d\n", ftell(f), feof(f));
+   if ((read = fread(buffer,n,1,f))!=1) {
+     perror("SECOND: Ack! ");
+     //fflush(stdout);
+     printf("THIRD: read = %d, n is %d, feof is %d, ftell is %d\n", read, n, feof(f), ftell(f));
+     //fflush(stdout);
+     Fatal("Cannot read %d bytes for text file %s\n",n,file);
+   }
    buffer[n] = 0;
    //  Close and return
    fclose(f);

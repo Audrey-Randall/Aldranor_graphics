@@ -33,6 +33,7 @@ int move=1;       //  Move light
 float asp=1;      //  Screen aspect ratio
 float dim=2;      //  World dimension
 float elv=-10;    //  Light elevation
+unsigned int tex_terrain;
 
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -223,10 +224,10 @@ int CreateShaderProgTess(void)
    int prog = glCreateProgram();
    //  Compile shaders
    CreateShader(prog,GL_VERTEX_SHADER         ,"geodesic.vert");
-   CreateShader(prog,GL_TESS_CONTROL_SHADER   ,"geodesic.tcs");
-   CreateShader(prog,GL_TESS_EVALUATION_SHADER,"geodesic.tes");
-   CreateShader(prog,GL_GEOMETRY_SHADER       ,"geodesic.geom");
-   CreateShader(prog,GL_FRAGMENT_SHADER       ,"geodesic.frag");
+   CreateShader(prog,GL_TESS_CONTROL_SHADER   ,"terrain.tcs");
+   CreateShader(prog,GL_TESS_EVALUATION_SHADER,"terrain.tes");
+   CreateShader(prog,GL_GEOMETRY_SHADER       ,"terrain.geom");
+   CreateShader(prog,GL_FRAGMENT_SHADER       ,"terrain.frag");
    //  Associate Position with VBO
    glBindAttribLocation(prog,Position,"Position");
    //  Link program
@@ -277,6 +278,154 @@ static void CreateIcosahedron()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(Faces),Faces,GL_STATIC_DRAW);
 }
 
+static void CreatePlane()
+{
+    unsigned int vao,verts,faces;
+    const int Faces[] = {
+      0, 1, 3,
+      0, 3, 2
+    };
+    const float Verts[] = {
+      -1.0, -1.0, 0.0,
+      -1.0,  1.0, 0.0,
+       1.0, -1.0, 0.0,
+       1.0,  1.0, 0.0,
+    };
+    N = sizeof(Faces)/sizeof(int);
+
+    // Create the VAO:
+    glGenVertexArrays(1,&vao);
+    glBindVertexArray(vao);
+
+    // Create the VBO for positions:
+    glGenBuffers(1,&verts);
+    glBindBuffer(GL_ARRAY_BUFFER,verts);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(Verts),Verts,GL_STATIC_DRAW);
+    glEnableVertexAttribArray(Position);
+    glVertexAttribPointer(Position,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
+
+    // Create the VBO for facet indices:
+    glGenBuffers(1,&faces);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,faces);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(Faces),Faces,GL_STATIC_DRAW);
+}
+
+//Check for errors
+void ErrCheck(const char* where)
+{
+   int err = glGetError();
+   if (err) fprintf(stderr,"ERROR: %s [%s]\n",gluErrorString(err),where);
+}
+
+//Print error and exit
+void Fatal(const char* format , ...)
+{
+   va_list args;
+   va_start(args,format);
+   vfprintf(stderr,format,args);
+   va_end(args);
+   exit(1);
+}
+
+/*
+ *  Reverse n bytes
+ */
+static void Reverse(void* x,const int n)
+{
+   int k;
+   char* ch = (char*)x;
+   for (k=0;k<n/2;k++)
+   {
+      char tmp = ch[k];
+      ch[k] = ch[n-1-k];
+      ch[n-1-k] = tmp;
+   }
+}
+
+/*
+ *  Load texture from BMP file
+ */
+unsigned int LoadTexBMP(const char* file)
+{
+   unsigned int   texture;    // Texture name
+   FILE*          f;          // File pointer
+   unsigned short magic;      // Image magic
+   unsigned int   dx,dy,size; // Image dimensions
+   unsigned short nbp,bpp;    // Planes and bits per pixel
+   unsigned char* image;      // Image data
+   unsigned int   off;        // Image offset
+   unsigned int   k;          // Counter
+   int            max;        // Maximum texture dimensions
+
+   //  Open file
+   f = fopen(file,"rb");
+   if (!f) Fatal("Cannot open file %s\n",file);
+   //  Check image magic
+   if (fread(&magic,2,1,f)!=1) Fatal("Cannot read magic from %s\n",file);
+   if (magic!=0x4D42 && magic!=0x424D) Fatal("Image magic not BMP in %s\n",file);
+   //  Read header
+   if (fseek(f,8,SEEK_CUR) || fread(&off,4,1,f)!=1 ||
+       fseek(f,4,SEEK_CUR) || fread(&dx,4,1,f)!=1 || fread(&dy,4,1,f)!=1 ||
+       fread(&nbp,2,1,f)!=1 || fread(&bpp,2,1,f)!=1 || fread(&k,4,1,f)!=1)
+     Fatal("Cannot read header from %s\n",file);
+   //  Reverse bytes on big endian hardware (detected by backwards magic)
+   if (magic==0x424D)
+   {
+      Reverse(&off,4);
+      Reverse(&dx,4);
+      Reverse(&dy,4);
+      Reverse(&nbp,2);
+      Reverse(&bpp,2);
+      Reverse(&k,4);
+   }
+   //  Check image parameters
+   glGetIntegerv(GL_MAX_TEXTURE_SIZE,&max);
+   if (dx<1 || dx>max) Fatal("%s image width %d out of range 1-%d\n",file,dx,max);
+   if (dy<1 || dy>max) Fatal("%s image height %d out of range 1-%d\n",file,dy,max);
+   if (nbp!=1)  Fatal("%s bit planes is not 1: %d\n",file,nbp);
+   if (bpp!=24) Fatal("%s bits per pixel is not 24: %d\n",file,bpp);
+   if (k!=0)    Fatal("%s compressed files not supported\n",file);
+#ifndef GL_VERSION_2_0
+   //  OpenGL 2.0 lifts the restriction that texture size must be a power of two
+   for (k=1;k<dx;k*=2);
+   if (k!=dx) Fatal("%s image width not a power of two: %d\n",file,dx);
+   for (k=1;k<dy;k*=2);
+   if (k!=dy) Fatal("%s image height not a power of two: %d\n",file,dy);
+#endif
+
+   //  Allocate image memory
+   size = 3*dx*dy;
+   image = (unsigned char*) malloc(size);
+   if (!image) Fatal("Cannot allocate %d bytes of memory for image %s\n",size,file);
+   //  Seek to and read image
+   if (fseek(f,off,SEEK_SET) || fread(image,size,1,f)!=1) Fatal("Error reading data from image %s\n",file);
+   fclose(f);
+   //  Reverse colors (BGR -> RGB)
+   for (k=0;k<size;k+=3)
+   {
+      unsigned char temp = image[k];
+      image[k]   = image[k+2];
+      image[k+2] = temp;
+   }
+
+   //  Sanity check
+   ErrCheck("LoadTexBMP");
+   //  Generate 2D texture
+   glGenTextures(1,&texture);
+   glBindTexture(GL_TEXTURE_2D,texture);
+   //  Copy image
+   glTexImage2D(GL_TEXTURE_2D,0,3,dx,dy,0,GL_RGB,GL_UNSIGNED_BYTE,image);
+   if (glGetError()) Fatal("Error in glTexImage2D %s %dx%d\n",file,dx,dy);
+   //  Scale linearly when image size doesn't match
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+
+   //  Free image memory
+   free(image);
+   //  Return texture name
+   return texture;
+}
+
 /*
  *  Start up GLUT and tell it what to do
  */
@@ -287,7 +436,7 @@ int main(int argc,char* argv[])
    //  Request double buffered, true color window with Z buffering at 600x600
    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
    glutInitWindowSize(600,600);
-   glutCreateWindow("HW #9, Audrey Randall: Grass");
+   glutCreateWindow("Aldranor");
 #ifdef USEGLEW
    //  Initialize GLEW
    if (glewInit()!=GLEW_OK) Fatal("Error initializing GLEW\n");
@@ -301,7 +450,10 @@ int main(int argc,char* argv[])
    glutIdleFunc(idle);
 
    //  Shader program
-   CreateIcosahedron();
+   CreatePlane();
+   glBindTexture(GL_TEXTURE_2D, tex_terrain);
+   glActiveTexture(GL_TEXTURE1);
+   tex_terrain = LoadTexBMP("Qt/terrain_will.bmp");
    shader = CreateShaderProgTess();
    ErrCheck("init");
    //  Pass control to GLUT so it can interact with the user
