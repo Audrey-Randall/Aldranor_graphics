@@ -20,6 +20,17 @@ static char* ReadText(const char *file)
    //rewind(f);
    fseek(f, 0L, SEEK_SET);
    printf("FIRST: feof is %d, ferr is %d\n", feof(f), ferror(f));
+   //Error nonsense
+   char c;
+   int count = 0;
+   //This loop never finishes on the problem files (test.frag being one)
+   /*while((c = fgetc(f)) != 0) {
+     printf("0x%x", c);
+     fflush(stdout);
+     if (count < 1630) sleep(1);
+     count++;
+   }*/
+   printf("***Number of chars in file: %d\n", count);
    //fflush(stdout);
    //  Allocate memory for the whole file
    buffer = (char*)malloc(n+1);
@@ -32,6 +43,7 @@ static char* ReadText(const char *file)
      //fflush(stdout);
      printf("THIRD: read = %d, n is %d, feof is %d, ftell is %d\n", read, n, feof(f), ftell(f));
      //fflush(stdout);
+     fclose(f);
      Fatal("Cannot read %d bytes for text file %s\n",n,file);
    }
    buffer[n] = 0;
