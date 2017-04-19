@@ -1,0 +1,37 @@
+//  Tesselation Evalution Shader, happens after TCS shader
+//An invocation of this shader has access to all of the vertices in its new mini-patch, but only represents one, and passes data for one to the geometry shader.
+
+#version 400
+
+//  Equilateral triangles in (CW order)
+layout(triangles, equal_spacing, cw) in;
+//  Modelview and projection matrices
+uniform mat4 ProjectionMatrix;
+uniform mat4 ModelViewMatrix;
+//  Coordinates in and out
+in  vec3 tcPosition[];  //vertices as interpolated by tessellator after tcs shader: edges have been split, new vertices stored here
+in  vec2 tcTexCoords[];
+out vec3 tePosition;
+out vec3 tePatchDistance;
+out vec2 teTexCoords;
+
+void main()
+{
+   //  Distance to edge of patch for interpolation
+   tePatchDistance = gl_TessCoord; //Barycentric and normalized coordinates of the virtual vertex I represent
+   //  Calculate coordinates of the real vertex I represent, from the coordinates of the patch I'm in and the virtual coordinates in gl_TessCoord
+   vec3 p0 = gl_TessCoord.x * tcPosition[0]; //Scale the normalized vertex position by the barycentric distance to the patch edge
+   vec3 p1 = gl_TessCoord.y * tcPosition[1];
+   vec3 p2 = gl_TessCoord.z * tcPosition[2];
+   //  Lengthen to unit radius
+   tePosition = normalize(p0 + p1 + p2);  //???
+
+   //Texture coords
+   vec2 t0 = gl_TessCoord.x * tcTexCoords[0];
+   vec2 t1 = gl_TessCoord.y * tcTexCoords[1];
+   vec2 t2 = gl_TessCoord.z * tcTexCoords[2];
+   teTexCoords = normalize(t0 + t1 + t2);
+
+   //  Project vertex
+   gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(tePosition, 1);  //pass the new, transformed, vertex to the geometry shader
+}

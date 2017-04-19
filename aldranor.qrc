@@ -7,5 +7,8 @@
         <file>terrain.vert</file>
         <file>map2.png</file>
         <file>terrain_will.jpg</file>
+        <file>terrain.geom</file>
+        <file>terrain.tcs</file>
+        <file>terrain.tes</file>
     </qresource>
 </RCC>

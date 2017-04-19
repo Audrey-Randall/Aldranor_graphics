@@ -128,7 +128,7 @@ void Aldranor_opengl::initializeGL()
 
    //  Load shaders
    addShader(":/Aldranor.vert",":/Aldranor.frag");
-   //addShader5(":/terrain.vert", ":/terrain.tcs", ":/terrain.tes", ":/terrain.geom" ":/terrain.frag");
+   addShader5(":/terrain.vert", ":/terrain.tcs", ":/terrain.tes", ":/terrain.geom", ":/terrain.frag");
 
    //  Cube vertex buffer object
    //  Copy data to vertex buffer object
@@ -157,6 +157,8 @@ void Aldranor_opengl::paintGL()
    //  Clear screen and Z-buffer
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glEnable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glClearColor(0.2,0.2,0.2,1.0);
 
    //  Set projection
    doProjection();
@@ -228,8 +230,11 @@ void Aldranor_opengl::paintGL()
       //  Set Modelview and Projection Matrix
       shader[mode]->setUniformValue("ProjectionMatrix",proj);
       shader[mode]->setUniformValue("ModelViewMatrix",mv);
+      shader[mode]->setUniformValue("NormalMatrix", mv.normalMatrix());
       shader[mode]->setUniformValue("LightSource", lsMat);
-      shader[mode]->setUniformValue("Segments", PLANE_SEGS);
+      shader[mode]->setUniformValue("Inner", 3);
+      shader[mode]->setUniformValue("Outer", 2);
+      shader[mode]->setPatchVertexCount(3); //replaces glPatchParameteri
 
       //  Select plane buffer
       plane_buffer.bind();
@@ -246,11 +251,14 @@ void Aldranor_opengl::paintGL()
       shader[mode]->enableAttributeArray(3);
       shader[mode]->setAttributeBuffer(3,GL_FLOAT,10*sizeof(float),2,12*sizeof(float));
 
+
+
       //  Draw the cube, or plane.
       glPushMatrix();
       glRotated(90, 1,0,0);
       glScaled(10,1,10);
-      glDrawArrays(GL_TRIANGLES,0,plane_size);
+      if(mode ==2 )glDrawArrays(GL_PATCHES,0,plane_size);
+      else glDrawArrays(GL_TRIANGLES,0,plane_size);
       glPopMatrix();
 
       //  Disable vertex arrays
@@ -278,6 +286,12 @@ void Aldranor_opengl::paintGL()
    renderText(2,0,0,"X");
    renderText(0,2,0,"Y");
    renderText(0,0,2,"Z");
+
+   GLenum err;
+   while((err = glGetError()) != GL_NO_ERROR)
+   {
+     printf("%x\n", err);
+   }
 }
 
 //

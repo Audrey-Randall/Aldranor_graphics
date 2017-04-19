@@ -1,0 +1,30 @@
+//  Geodesic Tesselation Control Shader
+// Happens right after vertex shader
+
+#version 400
+
+//  Tesselation control parameters
+uniform float Inner;
+uniform float Outer;
+//  Triangles out
+layout(vertices = 3) out;
+//  Coordinates in out out
+in  vec3 vPosition[];
+in  vec2 vTexCoords[];
+out vec3 tcPosition[];
+out vec2 tcTexCoords[];
+
+void main()
+{
+   //  Coordinate passthrough
+   tcPosition[gl_InvocationID] = vPosition[gl_InvocationID];
+   tcTexCoords[gl_InvocationID] = vTexCoords[gl_InvocationID];
+   //  Only the first vertex per patch needs to set the patch parameters
+   if (gl_InvocationID == 0)
+   {
+      gl_TessLevelInner[0] = 3;
+      gl_TessLevelOuter[0] = 2;
+      gl_TessLevelOuter[1] = 2;
+      gl_TessLevelOuter[2] = 2;
+   }
+}
