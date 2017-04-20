@@ -1,9 +1,10 @@
 //  Geodesic Tesselation Evalution Shader, happens after TCS shader
 
-#version 400
+#version 420
 
 //  Equilateral triangles in (CW order)
 layout(triangles, equal_spacing, cw) in;
+layout(binding = 1) uniform sampler2D terrain_tex;
 //  Modelview and projection matrices
 uniform mat4 Projection;
 uniform mat4 Modelview;
@@ -15,13 +16,16 @@ out vec3 tePatchDistance;
 void main()
 {
    //  Distance to edge of patch for interpolation
-   tePatchDistance = gl_TessCoord; //Barycentric coordinates of each vertex
+   tePatchDistance = gl_TessCoord; //My position in the primitive in barycentric coords
    //  Interpolate to vertex
    vec3 p0 = gl_TessCoord.x * tcPosition[0]; //Scale the normalized vertex position by the barycentric distance to the patch edge
    vec3 p1 = gl_TessCoord.y * tcPosition[1];
    vec3 p2 = gl_TessCoord.z * tcPosition[2];
-   //  Lengthen to unit radius
-   tePosition = normalize(p0 + p1 + p2);  //???
+
+   p0.y += (texture2D(terrain_tex, vec2(p0.x, p0.y)).x);
+   p1.y += (texture2D(terrain_tex, vec2(p1.x, p1.y)).y);
+   p2.y += (texture2D(terrain_tex, vec2(p2.x, p2.y)).z);
+   tePosition = p0 + p1 + p2;  //The normalize() was to make sure the new points were on the sphere, I don't need it
    //  Project vertex
    gl_Position = Projection * Modelview * vec4(tePosition, 1);  //pass the new, transformed, vertex to the geometry shader
 }

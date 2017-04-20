@@ -4,9 +4,13 @@
 
 //  Normal matrix
 uniform mat3 NormalMatrix;
+//  Light direction
+uniform vec3 LightDir;
+uniform mat4 Modelview;
+
 //  Triangles in and out
 layout(triangles) in;
-layout(triangle_strip, max_vertices = 6) out;
+layout(triangle_strip, max_vertices = 3) out;
 //  Coordinates and weights in and out
 in  vec3 tePosition[3];  //Coordinates of the newly created polygon
 in  vec3 tePatchDistance[3]; //Coordinates of the original polygon - the patch
@@ -14,6 +18,8 @@ out vec3 gFacetNormal;
 out vec3 gPatchDistance;
 out vec3 gTriDistance;
 out vec3 grassNormal;
+out vec3 gLight;
+out vec3 gView;
 flat out int  isGrass;
 
 highp float rand(vec2 co)
@@ -28,6 +34,7 @@ highp float rand(vec2 co)
 
 void main()
 {
+   vec3 P;
    float height = rand(gl_in[0].gl_Position.xy)/9.0;
    //  Compute normal as cross product
    vec3 A = tePosition[2] - tePosition[0];
@@ -45,6 +52,9 @@ void main()
    //You have to set all of these before calling emitVertex since they change per vertex
    //  First vertex
    isGrass = 0;
+   P = vec3(Modelview * gl_in[0].gl_Position).xyz;
+   gLight = LightDir - P;
+   gView = -P;
    gPatchDistance = tePatchDistance[0];
    gTriDistance = vec3(1, 0, 0);
    gl_Position = gl_in[0].gl_Position;
@@ -52,6 +62,9 @@ void main()
 
    //  Second vertex
    isGrass = 0;
+   P = vec3(Modelview * gl_in[1].gl_Position).xyz;
+   gLight = LightDir - P;
+   gView = -P;
    gPatchDistance = tePatchDistance[1];
    gTriDistance = vec3(0, 1, 0);
    gl_Position = gl_in[1].gl_Position;
@@ -59,6 +72,9 @@ void main()
 
    //  Third vertex
    isGrass = 0;
+   P = vec3(Modelview * gl_in[2].gl_Position).xyz;
+   gLight = LightDir - P;
+   gView = -P;
    gPatchDistance = tePatchDistance[2];
    gTriDistance = vec3(0, 0, 1);
    gl_Position = gl_in[2].gl_Position;
