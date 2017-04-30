@@ -49,12 +49,26 @@ void display()
    float cosph = Cos(ph);
    float sinph = Sin(ph);
    //  Orthogonal projection matrix
-   float project[16] =
+   /*float project[16] =
    {
     asp/dim ,   0.0 ,    0.0 , 0.0 ,
         0.0 , 1/dim ,    0.0 , 0.0 ,
         0.0 ,   0.0 , -1/dim , 0.0 ,
         0.0 ,   0.0 ,    0.0 , 1.0 ,
+   };*/
+   //Perspective projection
+   float n = 1.0; //near clipping plane
+   float f = 3.0; //far clipping plane
+   float r = 1.0;
+   float l = -1.0;
+   float t = 1.0;
+   float b = -1.0;
+   float project[16] =
+   {
+     2*n/(r-l), 0.0, (r+l)/(r-l), 0.0,
+     0.0, 2*n/(t-b), (t+b)/(t-b), 0.0,
+     0.0, 0.0, -(f+n)/(f-n), -2*f*n/(f-n),
+     0.0, 0.0, -1.0, 0.0
    };
    //  Modelview matrix
    float modelview[16] =
