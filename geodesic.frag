@@ -31,9 +31,9 @@ layout(binding=2) uniform sampler2D grassTex;
 out vec4  FragColor;
 
 vec3 getNormal(){
-  vec3 myPos = vec3(gTexCoord.x, texture2D(terrainTex, gTexCoord).x, gTexCoord.y);
-  vec3 pos1 = vec3(gTexCoord.x+0.05, texture2D(terrainTex, vec2(gTexCoord.x+0.05, gTexCoord.y)).x, gTexCoord.y);
-  vec3 pos2 = vec3(gTexCoord.x, texture2D(terrainTex, vec2(gTexCoord.x, gTexCoord.y+0.05)).x, gTexCoord.y+0.05);
+  vec3 myPos = vec3(gTexCoord.x, texture2D(terrainTex, gTexCoord).x*3, gTexCoord.y);
+  vec3 pos1 = vec3(gTexCoord.x+0.005, texture2D(terrainTex, vec2(gTexCoord.x+0.005, gTexCoord.y+0.005)).x*3, gTexCoord.y);
+  vec3 pos2 = vec3(gTexCoord.x, texture2D(terrainTex, vec2(gTexCoord.x, gTexCoord.y+0.005)).x*3, gTexCoord.y+0.005);
   vec3 a = pos1 - myPos;
   vec3 b = pos2 - myPos;
   vec3 normal = normalize(NormalMatrix * cross(a,b));
@@ -47,14 +47,14 @@ vec4 blinn()
    if(isGrass == 0) N = getNormal(); //normalize(gFacetNormal);
    else N = normalize(grassNormal);
    //  L is the light vector
-   vec3 L = normalize(gLight);
+   vec3 L = normalize(gLight); //light position - modelview*object vertex
    //  V is the view vector
    vec3 V = normalize(gView);
 
    //Settings
    float La = 0.3;
    float Ld = 1.0;
-   float Ls = 0.05;
+   float Ls = 0.001;
    vec4 Ambient = vec4(La,La,La,1.0);
    vec4 Diffuse = vec4(Ld,Ld,Ld,1.0);
    vec4 Specular = vec4(Ls,Ls,Ls,1.0);
@@ -68,12 +68,13 @@ vec4 blinn()
    {
       //  Add diffuse
       color += Id*Diffuse; //gl_FrontLightProduct[0].diffuse;
-      //  The half vectors
+      //  The half vectors (or reflected vector)
+      //vec3 R = reflect(-L, N);
       vec3 H = normalize(V+L);
       //  Specular is cosine of reflected and view vectors
-      float Is = dot(H,N);
+      float Is = dot(H,V);
       //16 = shininess
-      if (Is>0.0) color += pow(Is,64)*Specular;
+      if (Is>0.0) color += pow(Is,2)*Specular;
    }
 
    //  Return sum of color components
@@ -82,25 +83,8 @@ vec4 blinn()
 
 void main()
 {
-
-   //  Diffuse only lighting
-   vec3 N;
-   if(isGrass == 0) N = getNormal(); //normalize(gFacetNormal);
-   else N = normalize(grassNormal);
-   vec3 L = normalize(LightDir);
-   vec3 color;
-   if(isGrass == 0) color = AmbientMaterial + max(dot(N,L),0.0) * DiffuseMaterial;
-   else color = vec3(0, 0.05, 0) + max(dot(N,L),0.0) * vec3(0, 0.5, 0);
-
-   //  Draw mesh in red, heavy for patches, light for triangles
-   float d1 = min(min(gTriDistance.x, gTriDistance.y), gTriDistance.z);
-   float d2 = min(min(gPatchDistance.x, gPatchDistance.y), gPatchDistance.z);
-   //Step returns either 0 or 1 depending on if d1 is less than 0.02: 0 if d1 < 0.02, 1 otherwise
-   //This is a clever and simple way to color the lines red based on the barymetric coordinates of the vertices
-   //if(isGrass==0) color = mix(brown,color,step(0.02,d1) * step(0.01,d2));
-
    //  Pixel color
    //if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
    FragColor = blinn();// * texture2D(terrainTex,gTexCoord); //vec4(color, 1.0);
-   //FragColor = vec4(N, 1);
+   //FragColor = vec4(getNormal(), 1);
 }
