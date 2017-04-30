@@ -9,6 +9,8 @@ const vec3 red = vec3(1.0,0.0,0.0);
 const vec3 brown = vec3(53/255.0, 28/255.0, 1/255.0);
 //  Light direction
 uniform vec3 LightDir;
+uniform mat3 NormalMatrix;
+uniform mat4 Modelview;
 
 //  Normal
 in  vec3  gFacetNormal;
@@ -28,12 +30,21 @@ layout(binding=2) uniform sampler2D grassTex;
 //  Output color
 out vec4  FragColor;
 
+vec3 getNormal(){
+  vec3 myPos = vec3(gTexCoord.x, texture2D(terrainTex, gTexCoord).x, gTexCoord.y);
+  vec3 pos1 = vec3(gTexCoord.x+0.05, texture2D(terrainTex, vec2(gTexCoord.x+0.05, gTexCoord.y)).x, gTexCoord.y);
+  vec3 pos2 = vec3(gTexCoord.x, texture2D(terrainTex, vec2(gTexCoord.x, gTexCoord.y+0.05)).x, gTexCoord.y+0.05);
+  vec3 a = pos1 - myPos;
+  vec3 b = pos2 - myPos;
+  vec3 normal = normalize(NormalMatrix * cross(a,b));
+  return normal;
+}
 
 vec4 blinn()
 {
    //  N is the object normal
    vec3 N;
-   if(isGrass == 0) N = normalize(gFacetNormal);
+   if(isGrass == 0) N = getNormal(); //normalize(gFacetNormal);
    else N = normalize(grassNormal);
    //  L is the light vector
    vec3 L = normalize(gLight);
@@ -43,7 +54,7 @@ vec4 blinn()
    //Settings
    float La = 0.3;
    float Ld = 1.0;
-   float Ls = 1.0;
+   float Ls = 0.05;
    vec4 Ambient = vec4(La,La,La,1.0);
    vec4 Diffuse = vec4(Ld,Ld,Ld,1.0);
    vec4 Specular = vec4(Ls,Ls,Ls,1.0);
@@ -62,7 +73,7 @@ vec4 blinn()
       //  Specular is cosine of reflected and view vectors
       float Is = dot(H,N);
       //16 = shininess
-      if (Is>0.0) color += pow(Is,16)*Specular;
+      if (Is>0.0) color += pow(Is,64)*Specular;
    }
 
    //  Return sum of color components
@@ -74,7 +85,7 @@ void main()
 
    //  Diffuse only lighting
    vec3 N;
-   if(isGrass == 0) N = normalize(gFacetNormal);
+   if(isGrass == 0) N = getNormal(); //normalize(gFacetNormal);
    else N = normalize(grassNormal);
    vec3 L = normalize(LightDir);
    vec3 color;
@@ -89,6 +100,7 @@ void main()
    //if(isGrass==0) color = mix(brown,color,step(0.02,d1) * step(0.01,d2));
 
    //  Pixel color
-   if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
-   else FragColor = blinn() * texture2D(terrainTex,gTexCoord); //vec4(color, 1.0);
+   //if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
+   FragColor = blinn();// * texture2D(terrainTex,gTexCoord); //vec4(color, 1.0);
+   //FragColor = vec4(N, 1);
 }
