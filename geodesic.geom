@@ -14,12 +14,15 @@ layout(triangle_strip, max_vertices = 3) out;
 //  Coordinates and weights in and out
 in  vec3 tePosition[3];  //Coordinates of the newly created polygon
 in  vec3 tePatchDistance[3]; //Coordinates of the original polygon - the patch
+in  vec2 teTexCoord[3];
+in  vec4 up[]; //all of these are the same
 out vec3 gFacetNormal;
 out vec3 gPatchDistance;
 out vec3 gTriDistance;
 out vec3 grassNormal;
 out vec3 gLight;
 out vec3 gView;
+out vec2 gTexCoord;
 flat out int  isGrass;
 
 highp float rand(vec2 co)
@@ -35,7 +38,7 @@ highp float rand(vec2 co)
 void main()
 {
    vec3 P;
-   float height = rand(gl_in[0].gl_Position.xy)/9.0;
+   float height = 0.1;
    //  Compute normal as cross product
    vec3 A = tePosition[2] - tePosition[0];
    vec3 B = tePosition[1] - tePosition[0];
@@ -57,6 +60,7 @@ void main()
    gView = -P;
    gPatchDistance = tePatchDistance[0];
    gTriDistance = vec3(1, 0, 0);
+   gTexCoord = teTexCoord[0];
    gl_Position = gl_in[0].gl_Position;
    EmitVertex();
 
@@ -68,6 +72,7 @@ void main()
    gPatchDistance = tePatchDistance[1];
    gTriDistance = vec3(0, 1, 0);
    gl_Position = gl_in[1].gl_Position;
+   gTexCoord = teTexCoord[1];
    EmitVertex();
 
    //  Third vertex
@@ -77,17 +82,19 @@ void main()
    gView = -P;
    gPatchDistance = tePatchDistance[2];
    gTriDistance = vec3(0, 0, 1);
+   gTexCoord = teTexCoord[2];
    gl_Position = gl_in[2].gl_Position;
    EmitVertex();
 
    //  Done with triangle
    EndPrimitive();
 
-   //New triangle (blade of grass): vertices are tePosition[0], tePosition[1], tePosition[0] + (tePosition[1]-tePosition[0])/2 + 0.5*gFacetNormal
+   //New triangle (part of grass quad): vertices of quad are tePosition[0], tePosition[1], tePosition[0] + height*gFacetNormal, tePosition[1] + height*gFacetNormal
    //  First vertex
    isGrass = 1;
    gPatchDistance = tePatchDistance[0];
    gTriDistance = vec3(1, 0, 0);
+   gTexCoord = vec2(0.0,0.0);
    gl_Position = gl_in[0].gl_Position;
    EmitVertex();
 
@@ -95,16 +102,44 @@ void main()
    isGrass = 1;
    gPatchDistance = tePatchDistance[1];
    gTriDistance = vec3(0, 1, 0);
-   gl_Position = gl_in[1].gl_Position;
+   gTexCoord = vec2(0.0,1.0);
+   gl_Position = gl_in[0].gl_Position + height*up[0];
    EmitVertex();
 
    //  Third vertex
    isGrass = 1;
    gPatchDistance = tePatchDistance[2];
    gTriDistance = vec3(0, 0, 1);
-   vec4 midway = gl_in[0].gl_Position + (gl_in[1].gl_Position-gl_in[0].gl_Position)/2;
-   vec4 vert3 = midway - height*vec4(gFacetNormal.x, gFacetNormal.y, abs(gFacetNormal.z), 1.0);
-   gl_Position = vert3;
+   gTexCoord = vec2(1.0,0.0);
+   gl_Position = gl_in[1].gl_Position;
+   EmitVertex();
+
+   //  Done with triangle
+   EndPrimitive();
+
+   //And again:
+   //  First vertex
+   isGrass = 1;
+   gPatchDistance = tePatchDistance[0];
+   gTriDistance = vec3(1, 0, 0);
+   gTexCoord = vec2(0.0,1.0);
+   gl_Position = gl_in[0].gl_Position + height*up[0];
+   EmitVertex();
+
+   //  Second vertex
+   isGrass = 1;
+   gPatchDistance = tePatchDistance[1];
+   gTriDistance = vec3(0, 1, 0);
+   gTexCoord = vec2(1.0,1.0);
+   gl_Position = gl_in[1].gl_Position + height*up[0];
+   EmitVertex();
+
+   //  Third vertex
+   isGrass = 1;
+   gPatchDistance = tePatchDistance[2];
+   gTriDistance = vec3(0, 0, 1);
+   gTexCoord = vec2(1.0,0.0);
+   gl_Position = gl_in[1].gl_Position;
    EmitVertex();
 
    //  Done with triangle

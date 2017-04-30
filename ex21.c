@@ -18,7 +18,8 @@
  *  0          Reset view angle
  *  ESC        Exit
 
- Texture source: http://forum.worldviz.com/attachment.php?attachmentid=417&d=1302715253
+ Texture sources: http://forum.worldviz.com/attachment.php?attachmentid=417&d=1302715253
+				  http://www.clipartbest.com/cliparts/7ia/Lpk/7iaLpkGxT.png
  */
 #include "CSCIx239.h"
 int th=0;         //  Azimuth of view angle
@@ -34,6 +35,7 @@ float asp=1;      //  Screen aspect ratio
 float dim=2;      //  World dimension
 float elv=-10;    //  Light elevation
 unsigned int tex_terrain;
+unsigned int tex_grass;
 
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -90,6 +92,10 @@ void display()
    if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
    id = glGetUniformLocation(shader,"NormalMatrix");
    if (id>=0) glUniformMatrix3fv(id,1,0,normal);
+   id = glGetUniformLocation(shader,"terrainTex");
+   if (id>=0) glUniform1i(id,0);
+   id = glGetUniformLocation(shader,"grassTex");
+   if (id>=0) glUniform1i(id,1);
 
    // Render the scene
    glEnable(GL_DEPTH_TEST);
@@ -97,7 +103,9 @@ void display()
    glClearColor(0.2,0.2,0.2,1.0);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPatchParameteri(GL_PATCH_VERTICES,3);
-   
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
    glDrawElements(GL_PATCHES,N,GL_UNSIGNED_INT,0);
 
    //  Unset shader
@@ -296,9 +304,17 @@ int main(int argc,char* argv[])
 
    //  Shader program
    CreatePlane();
+
+   glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, tex_terrain);
-   glActiveTexture(GL_TEXTURE1);
    tex_terrain = LoadTexBMP("Qt/terrain_will.bmp");
+
+   glActiveTexture(GL_TEXTURE1);
+   glBindTexture(GL_TEXTURE_2D, tex_grass);
+   tex_grass = LoadTexBMP("grass.bmp");
+
+   glActiveTexture(GL_TEXTURE0);
+
    shader = CreateShaderProgTess();
    ErrCheck("init");
    //  Pass control to GLUT so it can interact with the user

@@ -1,6 +1,6 @@
 //  Geodesic Fragment Shader
 
-#version 400
+#version 430
 
 //  Colors
 const vec3 AmbientMaterial = vec3(53/255.0, 28/255.0, 1/255.0);
@@ -21,6 +21,10 @@ in vec3 gView;
 //Grass
 in  vec3  grassNormal;
 flat in  int   isGrass;
+//Texture
+in vec2 gTexCoord;
+layout(binding=1) uniform sampler2D terrainTex;
+layout(binding=2) uniform sampler2D grassTex;
 //  Output color
 out vec4  FragColor;
 
@@ -28,12 +32,14 @@ out vec4  FragColor;
 vec4 blinn()
 {
    //  N is the object normal
-   vec3 N = normalize(gFacetNormal);
+   vec3 N;
+   if(isGrass == 0) N = normalize(gFacetNormal);
+   else N = normalize(grassNormal);
    //  L is the light vector
    vec3 L = normalize(gLight);
    //  V is the view vector
    vec3 V = normalize(gView);
-   
+
    //Settings
    float La = 0.3;
    float Ld = 1.0;
@@ -65,7 +71,7 @@ vec4 blinn()
 
 void main()
 {
-   
+
    //  Diffuse only lighting
    vec3 N;
    if(isGrass == 0) N = normalize(gFacetNormal);
@@ -83,5 +89,6 @@ void main()
    //if(isGrass==0) color = mix(brown,color,step(0.02,d1) * step(0.01,d2));
 
    //  Pixel color
-   FragColor = blinn(); // * texture2D(tex,oTexCoords); //vec4(color, 1.0);
+   if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
+   else FragColor = blinn() * texture2D(terrainTex,gTexCoord); //vec4(color, 1.0);
 }

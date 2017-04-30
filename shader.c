@@ -17,8 +17,7 @@ static char* ReadText(const char *file)
    //  Seek to end to determine size, then rewind
    fseek(f,0,SEEK_END);
    n = ftell(f);
-   //rewind(f);
-   fseek(f, 0L, SEEK_SET);
+   rewind(f);
    printf("FIRST: feof is %d, ferr is %d\n", feof(f), ferror(f));
    //Error nonsense
    char c;
@@ -30,7 +29,7 @@ static char* ReadText(const char *file)
      if (count < 1630) sleep(1);
      count++;
    }*/
-   printf("***Number of chars in file: %d\n", count);
+   //printf("***Number of chars in file: %d\n", count);
    //fflush(stdout);
    //  Allocate memory for the whole file
    buffer = (char*)malloc(n+1);
@@ -39,9 +38,7 @@ static char* ReadText(const char *file)
    fseek(f, 0L, SEEK_SET);
    printf("ftell = %d, feof = %d\n", ftell(f), feof(f));
    if ((read = fread(buffer,n,1,f))!=1) {
-     perror("SECOND: Ack! ");
-     //fflush(stdout);
-     printf("THIRD: read = %d, n is %d, feof is %d, ftell is %d\n", read, n, feof(f), ftell(f));
+     printf("THIRD: read = %d, n is %d, feof is %d, ftell is %d, error: %s\n", read, n, feof(f), ftell(f), strerror(errno));
      //fflush(stdout);
      fclose(f);
      Fatal("Cannot read %d bytes for text file %s\n",n,file);
