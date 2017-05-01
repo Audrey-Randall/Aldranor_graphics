@@ -25,8 +25,9 @@ in  vec3  grassNormal;
 flat in  int   isGrass;
 //Texture
 in vec2 gTexCoord;
-layout(binding=1) uniform sampler2D terrainTex;
-layout(binding=2) uniform sampler2D grassTex;
+layout(binding=0) uniform sampler2D terrainTex;
+layout(binding=1) uniform sampler2D grassTex;
+layout(binding=2) uniform sampler2D groundTex;
 //  Output color
 out vec4  FragColor;
 
@@ -85,6 +86,6 @@ void main()
 {
    //  Pixel color
    //if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
-   FragColor = blinn();// * texture2D(terrainTex,gTexCoord); //vec4(color, 1.0);
+   FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
    //FragColor = vec4(getNormal(), 1);
 }

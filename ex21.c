@@ -25,7 +25,8 @@
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int zh=0;         //  Light angle
-int shader=0;     //  Shader
+int terrain_shader=0;     //  Shader
+int water_shader=0;
 int N;            //  Number of faces
 int Position;     //  Position VBO
 int Inner=1;      //  Tesselation inner level
@@ -36,6 +37,7 @@ float dim=2;      //  World dimension
 float elv=-10;    //  Light elevation
 unsigned int tex_terrain;
 unsigned int tex_grass;
+unsigned int tex_ground;
 
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -63,11 +65,15 @@ void display()
    float l = -1.0;
    float t = 1.0;
    float b = -1.0;
+   //FOV =  tan(toRadians(FOV/2))
+   float y_scale = 1.0/tan(0.26);
+   float x_scale = y_scale/asp;
+   float frustum_len = f-n;
    float project[16] =
    {
-     2*n/(r-l), 0.0, (r+l)/(r-l), 0.0,
-     0.0, 2*n/(t-b), (t+b)/(t-b), 0.0,
-     0.0, 0.0, -(f+n)/(f-n), -2*f*n/(f-n),
+     x_scale, 0.0, 0.0, 0.0,
+     0.0, y_scale, 0.0, 0.0,
+     0.0, 0.0, -(f+n)/frustum_len, -2*f*n/frustum_len,
      0.0, 0.0, -1.0, 0.0
    };
    //  Modelview matrix
@@ -87,28 +93,28 @@ void display()
    };
 
    //  Set shader
-   glUseProgram(shader);
+   glUseProgram(terrain_shader);
 
    //  Controls for tesselation level
-   id = glGetUniformLocation(shader,"Inner");
+   id = glGetUniformLocation(terrain_shader,"Inner");
    if (id>=0) glUniform1f(id,Inner);
-   id = glGetUniformLocation(shader,"Outer");
+   id = glGetUniformLocation(terrain_shader,"Outer");
    if (id>=0) glUniform1f(id,Outer);
 
    //  Lighting parameters
-   id = glGetUniformLocation(shader,"LightDir");
+   id = glGetUniformLocation(terrain_shader,"LightDir");
    if (id>=0) glUniform3f(id,Cos(zh),0.1*elv,Sin(zh));
 
    //  Set transformation matrixes
-   id = glGetUniformLocation(shader,"Projection");
+   id = glGetUniformLocation(terrain_shader,"Projection");
    if (id>=0) glUniformMatrix4fv(id,1,0,project);
-   id = glGetUniformLocation(shader,"Modelview");
+   id = glGetUniformLocation(terrain_shader,"Modelview");
    if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
-   id = glGetUniformLocation(shader,"NormalMatrix");
+   id = glGetUniformLocation(terrain_shader,"NormalMatrix");
    if (id>=0) glUniformMatrix3fv(id,1,0,normal);
-   id = glGetUniformLocation(shader,"terrainTex");
+   id = glGetUniformLocation(terrain_shader,"terrainTex");
    if (id>=0) glUniform1i(id,0);
-   id = glGetUniformLocation(shader,"grassTex");
+   id = glGetUniformLocation(terrain_shader,"grassTex");
    if (id>=0) glUniform1i(id,1);
 
    // Render the scene
@@ -124,6 +130,7 @@ void display()
 
    //  Unset shader
    glUseProgram(0);
+
 
    //  Display parameters
    glColor3f(1,1,1);
@@ -316,20 +323,24 @@ int main(int argc,char* argv[])
    glutKeyboardFunc(key);
    glutIdleFunc(idle);
 
-   //  Shader program
    CreatePlane();
 
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, tex_terrain);
-   tex_terrain = LoadTexBMP("Qt/terrain_will.bmp");
+   tex_terrain = LoadTexBMP("Qt/terrain_will_2.bmp");
 
    glActiveTexture(GL_TEXTURE1);
    glBindTexture(GL_TEXTURE_2D, tex_grass);
    tex_grass = LoadTexBMP("grass.bmp");
 
-   glActiveTexture(GL_TEXTURE0);
+   glActiveTexture(GL_TEXTURE2);
+   glBindTexture(GL_TEXTURE_2D, tex_ground);
+   tex_ground = LoadTexBMP("mud.bmp");
 
-   shader = CreateShaderProgTess();
+   glActiveTexture(GL_TEXTURE0);
+   //TODO: add water_shader and apply it to a plane
+
+   terrain_shader = CreateShaderProgTess();
    ErrCheck("init");
    //  Pass control to GLUT so it can interact with the user
    glutMainLoop();
