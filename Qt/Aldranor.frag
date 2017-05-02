@@ -48,5 +48,5 @@ vec4 blinn()
 
 void main()
 {
-   Fragcolor = blinn() * texture2D(tex,oTexCoords);
+   Fragcolor = vec4(0,0,1,1); //blinn() * texture2D(tex,oTexCoords);
 }

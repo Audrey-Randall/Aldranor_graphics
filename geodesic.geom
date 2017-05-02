@@ -16,6 +16,7 @@ in  vec3 tePosition[3];  //Coordinates of the newly created polygon
 in  vec3 tePatchDistance[3]; //Coordinates of the original polygon - the patch
 in  vec2 teTexCoord[3];
 in  vec4 up[]; //all of these are the same
+in  vec3 teObjVert[];
 out vec3 gFacetNormal;
 out vec3 gPatchDistance;
 out vec3 gTriDistance;
@@ -23,6 +24,7 @@ out vec3 grassNormal;
 out vec3 gLight;
 out vec3 gView;
 out vec2 gTexCoord;
+out vec3 gObjVert;
 flat out int  isGrass;
 
 highp float rand(vec2 co)
@@ -61,6 +63,7 @@ void main()
    gPatchDistance = tePatchDistance[0];
    gTriDistance = vec3(1, 0, 0);
    gTexCoord = teTexCoord[0];
+   gObjVert = teObjVert[0];
    gl_Position = gl_in[0].gl_Position;
    EmitVertex();
 
@@ -73,6 +76,7 @@ void main()
    gTriDistance = vec3(0, 1, 0);
    gl_Position = gl_in[1].gl_Position;
    gTexCoord = teTexCoord[1];
+   gObjVert = teObjVert[1];
    EmitVertex();
 
    //  Third vertex
@@ -84,6 +88,7 @@ void main()
    gTriDistance = vec3(0, 0, 1);
    gTexCoord = teTexCoord[2];
    gl_Position = gl_in[2].gl_Position;
+   gObjVert = teObjVert[2];
    EmitVertex();
 
    //  Done with triangle

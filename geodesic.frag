@@ -12,6 +12,9 @@ uniform vec3 LightDir;
 uniform mat3 NormalMatrix;
 uniform mat4 Modelview;
 
+//Time
+uniform int time;
+
 //  Normal
 in  vec3  gFacetNormal;
 //  Distance to edge of patch and triange
@@ -25,6 +28,7 @@ in  vec3  grassNormal;
 flat in  int   isGrass;
 //Texture
 in vec2 gTexCoord;
+in vec3 gObjVert;
 layout(binding=0) uniform sampler2D terrainTex;
 layout(binding=1) uniform sampler2D grassTex;
 layout(binding=2) uniform sampler2D groundTex;
@@ -86,6 +90,12 @@ void main()
 {
    //  Pixel color
    //if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
-   FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
-   //FragColor = vec4(getNormal(), 1);
+
+   //Calculate distortion
+   if(gObjVert.y < -1.0){
+      vec2 distCoords = vec2(gTexCoord.x+0.002*sin(gTexCoord.y*300+0.3*time), gTexCoord.y+0.002*sin(gTexCoord.x*300+0.5*time));
+      FragColor = blinn()*texture2D(groundTex, distCoords);
+   } else {
+      FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
+   }
 }

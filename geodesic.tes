@@ -14,6 +14,7 @@ in  vec3 tcPosition[];  //vertices as interpolated by tcs shader: edges have bee
 out vec3 tePosition;
 out vec3 tePatchDistance;
 out vec2 teTexCoord;
+out vec3 teObjVert;
 out vec4 up;
 
 void main()
@@ -33,5 +34,6 @@ void main()
    tePosition.y += texture2D(terrainTex, teTexCoord).x*6 - 2.0;
    up = vec4(1.0,0.0,0.0,1.0);
    //  Project vertex
+   teObjVert = vec3(tePosition.x, tePosition.y, tePosition.z);
    gl_Position = Projection * Modelview * vec4(tePosition, 1);  //pass the new, transformed, vertex to the geometry shader
 }

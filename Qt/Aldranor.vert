@@ -1,8 +1,8 @@
 #version 400 core
 
 //  Transformation matrices
-uniform mat4 ModelViewMatrix;
-uniform mat4 ProjectionMatrix;
+uniform mat4 Modelview;
+uniform mat4 Projection;
 uniform mat4 LightSource;
 uniform sampler2D tex;
 
@@ -20,17 +20,9 @@ out vec3 oNormal;
 out vec4 Ambient;
 out vec2 oTexCoords;
 
-void newmain()
-{	
-   //  Pass colors to fragment shader (will be interpolated)
-   FrontColor = Color;
-   //  Set transformed vertex location
-   gl_Position =  ProjectionMatrix * ModelViewMatrix * Vertex;
-}
-
 
 void main(){
-    //
+    /*//
     //  Lighting values needed by fragment shader
     //
     //  Vertex location in modelview coordinates
@@ -48,8 +40,8 @@ void main(){
     Ambient = vec4(0,0,0,1) + LightSource[0].xyzw;
 
     //  Texture coordinate for fragment shader
-    oTexCoords = iTexCoords; //gl_MultiTexCoord0;
+    oTexCoords = iTexCoords; //gl_MultiTexCoord0;*/
 
     //  Set vertex position
-    gl_Position = ProjectionMatrix * ModelViewMatrix * Vertex;
+    gl_Position = Projection * Modelview * Vertex;
 }
