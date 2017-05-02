@@ -150,11 +150,11 @@ void display()
    // Render the scene
    glEnable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
-   glClearColor(0.2,0.2,0.2,1.0);
+   glClearColor(41/255.0, 48/255.0, 61/255.0,1.0);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPatchParameteri(GL_PATCH_VERTICES,3);
    glEnable(GL_BLEND);
-   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    //glEnableVertexAttribArray(Position);
    //glVertexAttribPointer(Position,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
@@ -165,6 +165,7 @@ void display()
 
    int current = water_shader;
    glUseProgram(current);
+   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
    //Set uniforms
    id = glGetUniformLocation(current,"Projection");

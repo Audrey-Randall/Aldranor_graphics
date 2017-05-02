@@ -50,7 +50,7 @@ void main()
     //The range of light intensities is super high, need to up the ambient and decrease specular
     //vec4 texture = texture2D(tex, texCoords).xyzw;
     //texture.w = 1;
-    vec4 allColor = color * vec4(34/255.0,99/255.0,96/255.0,1.0);
+    vec4 allColor = color * vec4(41/255.0,48/255.0,61/255.0,1.0);
     allColor.w = 0.3;
     FragColor = allColor;
 }

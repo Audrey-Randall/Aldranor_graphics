@@ -89,13 +89,18 @@ vec4 blinn()
 void main()
 {
    //  Pixel color
-   //if(isGrass != 0) FragColor = blinn() * texture2D(grassTex, gTexCoord);
-
-   //Calculate distortion
-   if(gObjVert.y < -1.0){
-      vec2 distCoords = vec2(gTexCoord.x+0.002*sin(gTexCoord.y*300+0.3*time), gTexCoord.y+0.002*sin(gTexCoord.x*300+0.5*time));
-      FragColor = blinn()*texture2D(groundTex, distCoords);
+   if(isGrass != 0) {
+      vec4 texColor = texture2D(grassTex, gTexCoord);
+      vec4 grassColor = blinn() * texColor;
+      if(texColor.r > 0.9) grassColor.w = 0.0;
+      FragColor = vec4(1.0,0,0,1);//grassColor;
    } else {
-      FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
+     //Calculate distortion
+     if(gObjVert.y < -1.0){
+        vec2 distCoords = vec2(gTexCoord.x+0.002*sin(gTexCoord.y*300+0.3*time), gTexCoord.y+0.002*sin(gTexCoord.x*300+0.5*time));
+        FragColor = blinn()*texture2D(groundTex, distCoords);
+     } else {
+        FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
+     }
    }
 }
