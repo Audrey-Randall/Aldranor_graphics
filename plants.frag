@@ -83,26 +83,9 @@ vec4 blinn()
 
 void main()
 {
-   //  Pixel color
-   if(isGrass != 0) {
       vec4 texColor = texture2D(grassTex, gTexCoord);
       vec4 grassColor = blinn() * texColor;
       if(texColor.r > 0.9) grassColor.w = 0.0;
       FragColor = grassColor;
-   } else {
-     //Calculate distortion
-     if(gObjVert.y < -1.0){
-        vec2 distCoords = vec2(gTexCoord.x+0.002*sin(gTexCoord.y*300+0.3*time), gTexCoord.y+0.002*sin(gTexCoord.x*300+0.5*time));
 
-        //Fog
-        vec4 fogColor = vec4(0,0,0,1);
-        float dEnd = -4; //depth at which fog is complete in world coordinates
-        float dStart = -1.0; //depth at which fog begins, at the water's surface
-        float f = (dEnd - gObjVert.y)/(dEnd - dStart);
-        vec4 allColor = blinn()*texture2D(groundTex, distCoords);
-        FragColor = f*allColor + (1-f)*fogColor;
-     } else {
-        FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
-     }
-   }
 }

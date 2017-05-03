@@ -550,7 +550,7 @@ int main(int argc,char* argv[])
    terrain_shader = CreateShaderProgTess();
    plant_shader = CreateShaderProgTessGrass();
    water_shader = CreateShaderProg("water_surf.vert","water_surf.frag");
-   default_shader = CreateShaderProg("Qt/Aldranor.vert", "Qt/Aldranor.frag");
+   //default_shader = CreateShaderProg("Qt/Aldranor.vert", "Qt/Aldranor.frag");
 
    //if(renderToFrameBuf() < 0) Fatal("frame buffer error\n");
 
