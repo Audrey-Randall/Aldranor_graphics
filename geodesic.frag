@@ -96,7 +96,7 @@ void main()
 
         //Fog
         vec4 fogColor = vec4(0,0,0,1);
-        float dEnd = -4; //depth at which fog is complete in world coordinates
+        float dEnd = -3; //depth at which fog is complete in world coordinates
         float dStart = -1.0; //depth at which fog begins, at the water's surface
         float f = (dEnd - gObjVert.y)/(dEnd - dStart);
         vec4 allColor = blinn()*texture2D(groundTex, distCoords);

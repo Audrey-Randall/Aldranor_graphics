@@ -1,4 +1,4 @@
-//  Geodesic Fragment Shader
+//  Plant fragment shader
 
 #version 430
 
@@ -53,7 +53,7 @@ vec4 blinn()
 
    //Settings
    float La = 0.7;
-   float Ld = 0.7;
+   float Ld = 0.3;
    float Ls = 0.001;
    vec4 Ambient = vec4(La,La,La,1.0);
    vec4 Diffuse = vec4(Ld,Ld,Ld,1.0);
@@ -74,7 +74,7 @@ vec4 blinn()
       //  Specular is cosine of reflected and view vectors
       float Is = dot(H,V);
       //16 = shininess
-      if (Is>0.0) color += pow(Is,2)*Specular;
+      //if (Is>0.0) color += pow(Is,2)*Specular;
    }
 
    //  Return sum of color components
@@ -83,9 +83,9 @@ vec4 blinn()
 
 void main()
 {
-      vec4 texColor = texture2D(grassTex, gTexCoord);
-      vec4 grassColor = blinn() * texColor;
-      if(texColor.r > 0.9) grassColor.w = 0.0;
-      FragColor = grassColor;
+    vec4 texColor = texture2D(grassTex, gTexCoord);
+    vec4 grassColor = blinn() * texColor;
+    if(texColor.r > 0.9) grassColor.w = 0.0;
+    FragColor = grassColor;
 
 }
