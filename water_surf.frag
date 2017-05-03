@@ -51,6 +51,6 @@ void main()
     //vec4 texture = texture2D(tex, texCoords).xyzw;
     //texture.w = 1;
     vec4 allColor = color * vec4(41/255.0,48/255.0,61/255.0,1.0);
-    allColor.w = 0.3;
+    allColor.w = 0.15;
     FragColor = allColor;
 }

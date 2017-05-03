@@ -28,6 +28,7 @@ int zh=0;         //  Light angle
 int terrain_shader=0;     //  Shader
 int water_shader=0;
 int default_shader=0;
+int plant_shader=0;
 int N;            //  Number of faces
 int Position0;     //  Position VBO for terrain
 int Position1;     //  Position VBO for water
@@ -71,12 +72,136 @@ void DrawWater(){
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
+void drawTerrain(float* project, float* modelview, float* normal){
+  int id;
+  //  Set shader
+  glUseProgram(terrain_shader);
+
+  //  Controls for tesselation level
+  id = glGetUniformLocation(terrain_shader,"Inner");
+  if (id>=0) glUniform1f(id,Inner);
+  id = glGetUniformLocation(terrain_shader,"Outer");
+  if (id>=0) glUniform1f(id,Outer);
+
+  //  Lighting parameters
+  id = glGetUniformLocation(terrain_shader,"LightDir");
+  if (id>=0) glUniform3f(id,Cos(zh),0.1*elv,Sin(zh));
+
+  //  Set transformation matrixes
+  id = glGetUniformLocation(terrain_shader,"Projection");
+  if (id>=0) glUniformMatrix4fv(id,1,0,project);
+  id = glGetUniformLocation(terrain_shader,"Modelview");
+  if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
+  id = glGetUniformLocation(terrain_shader,"NormalMatrix");
+  if (id>=0) glUniformMatrix3fv(id,1,0,normal);
+  id = glGetUniformLocation(terrain_shader,"terrainTex");
+  if (id>=0) glUniform1i(id,0);
+  id = glGetUniformLocation(terrain_shader,"grassTex");
+  if (id>=0) glUniform1i(id,1);
+  id = glGetUniformLocation(terrain_shader,"time");
+  if (id>=0) glUniform1i(id,frameCont);
+
+  // Render the scene
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+  glClearColor(41/255.0, 48/255.0, 61/255.0,1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glPatchParameteri(GL_PATCH_VERTICES,3);
+  //glEnable(GL_BLEND);
+  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  //glEnableVertexAttribArray(Position);
+  //glVertexAttribPointer(Position,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
+  glBindVertexArray(vao0);
+  if(vao0==0) Fatal("VAO0 was null\n");
+  glDrawElements(GL_PATCHES,N,GL_UNSIGNED_INT,0);
+  //glDisableVertexAttribArray(Position);
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+}
+
+void drawWater(float* project, float* modelview, float* normal, int current){
+     int id;
+     glUseProgram(current);
+     glEnable(GL_BLEND);
+     glDisable(GL_CULL_FACE);
+     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+     //Set uniforms
+     id = glGetUniformLocation(current,"Projection");
+     if (id>=0) glUniformMatrix4fv(id,1,0,project);
+     id = glGetUniformLocation(current,"Modelview");
+     if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
+     id = glGetUniformLocation(current,"NormalMatrix");
+     if (id>=0) glUniformMatrix3fv(id,1,0,normal);
+     id = glGetUniformLocation(current,"normal_tex");
+     if (id>=0) glUniform1i(id,3);
+     id = glGetUniformLocation(current,"LightPos");
+     if (id>=0) glUniform4f(id,Cos(zh),0.1*elv,Sin(zh), 1.0);
+     id = glGetUniformLocation(current,"frame");
+     if (id>=0) glUniform1i(id,frame);
+
+     //DrawWater();
+     /*glBindVertexArray(vao1);
+     if(vao1==0) Fatal("VAO1 was null\n");
+     glDrawElements(GL_TRIANGLES,N,GL_UNSIGNED_INT,0);*/
+     glBindVertexArray(vao1);
+     glDrawElements(GL_TRIANGLES,N,GL_UNSIGNED_INT,0);
+     glDisable(GL_BLEND);
+     glEnable(GL_CULL_FACE);
+}
+
+void drawPlants(float* project, float* modelview, float* normal, int current){
+  int id;
+  glUseProgram(current);
+  glEnable(GL_BLEND);
+  glDisable(GL_CULL_FACE);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_DEPTH_TEST);
+  glPatchParameteri(GL_PATCH_VERTICES,3);
+
+  //  Controls for tesselation level
+  id = glGetUniformLocation(current,"Inner");
+  if (id>=0) glUniform1f(id,Inner);
+  id = glGetUniformLocation(current,"Outer");
+  if (id>=0) glUniform1f(id,Outer);
+
+  //  Lighting parameters
+  id = glGetUniformLocation(current,"LightDir");
+  if (id>=0) glUniform3f(id,Cos(zh),0.1*elv,Sin(zh));
+
+  //  Set transformation matrixes
+  id = glGetUniformLocation(current,"Projection");
+  if (id>=0) glUniformMatrix4fv(id,1,0,project);
+  id = glGetUniformLocation(current,"Modelview");
+  if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
+  id = glGetUniformLocation(current,"NormalMatrix");
+  if (id>=0) glUniformMatrix3fv(id,1,0,normal);
+  id = glGetUniformLocation(current,"terrainTex");
+  if (id>=0) glUniform1i(id,0);
+  id = glGetUniformLocation(current,"grassTex");
+  if (id>=0) glUniform1i(id,1);
+  id = glGetUniformLocation(current,"time");
+  if (id>=0) glUniform1i(id,frameCont);
+
+  //DrawWater();
+  /*glBindVertexArray(vao1);
+  if(vao1==0) Fatal("VAO1 was null\n");
+  glDrawElements(GL_TRIANGLES,N,GL_UNSIGNED_INT,0);*/
+  glBindVertexArray(vao0);
+  if(vao0==0) Fatal("VAO0 was null\n");
+  glDrawElements(GL_PATCHES,N,GL_UNSIGNED_INT,0);
+
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+}
+
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
 void display()
 {
-   int id;
    //  Modelview angles
    float costh = Cos(th);
    float sinth = Sin(th);
@@ -120,73 +245,11 @@ void display()
    -sinth*cosph , sinph ,  costh*cosph ,
    };
 
-   //  Set shader
-   glUseProgram(terrain_shader);
-
-   //  Controls for tesselation level
-   id = glGetUniformLocation(terrain_shader,"Inner");
-   if (id>=0) glUniform1f(id,Inner);
-   id = glGetUniformLocation(terrain_shader,"Outer");
-   if (id>=0) glUniform1f(id,Outer);
-
-   //  Lighting parameters
-   id = glGetUniformLocation(terrain_shader,"LightDir");
-   if (id>=0) glUniform3f(id,Cos(zh),0.1*elv,Sin(zh));
-
-   //  Set transformation matrixes
-   id = glGetUniformLocation(terrain_shader,"Projection");
-   if (id>=0) glUniformMatrix4fv(id,1,0,project);
-   id = glGetUniformLocation(terrain_shader,"Modelview");
-   if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
-   id = glGetUniformLocation(terrain_shader,"NormalMatrix");
-   if (id>=0) glUniformMatrix3fv(id,1,0,normal);
-   id = glGetUniformLocation(terrain_shader,"terrainTex");
-   if (id>=0) glUniform1i(id,0);
-   id = glGetUniformLocation(terrain_shader,"grassTex");
-   if (id>=0) glUniform1i(id,1);
-   id = glGetUniformLocation(terrain_shader,"time");
-   if (id>=0) glUniform1i(id,frameCont);
-
-   // Render the scene
-   glEnable(GL_DEPTH_TEST);
-   glDisable(GL_CULL_FACE);
-   glClearColor(41/255.0, 48/255.0, 61/255.0,1.0);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glPatchParameteri(GL_PATCH_VERTICES,3);
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-   //glEnableVertexAttribArray(Position);
-   //glVertexAttribPointer(Position,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
-   glBindVertexArray(vao0);
-   if(vao0==0) Fatal("VAO0 was null\n");
-   glDrawElements(GL_PATCHES,N,GL_UNSIGNED_INT,0);
-   //glDisableVertexAttribArray(Position);
-
+   drawTerrain(project, modelview, normal);
    int current = water_shader;
-   glUseProgram(current);
-   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-   //Set uniforms
-   id = glGetUniformLocation(current,"Projection");
-   if (id>=0) glUniformMatrix4fv(id,1,0,project);
-   id = glGetUniformLocation(current,"Modelview");
-   if (id>=0) glUniformMatrix4fv(id,1,0,modelview);
-   id = glGetUniformLocation(current,"NormalMatrix");
-   if (id>=0) glUniformMatrix3fv(id,1,0,normal);
-   id = glGetUniformLocation(current,"normal_tex");
-   if (id>=0) glUniform1i(id,3);
-   id = glGetUniformLocation(current,"LightPos");
-   if (id>=0) glUniform4f(id,Cos(zh),0.1*elv,Sin(zh), 1.0);
-   id = glGetUniformLocation(current,"frame");
-   if (id>=0) glUniform1i(id,frame);
-
-   //DrawWater();
-   /*glBindVertexArray(vao1);
-   if(vao1==0) Fatal("VAO1 was null\n");
-   glDrawElements(GL_TRIANGLES,N,GL_UNSIGNED_INT,0);*/
-   glBindVertexArray(vao1);
-   glDrawElements(GL_TRIANGLES,N,GL_UNSIGNED_INT,0);
+   drawWater(project, modelview, normal, current);
+   current = plant_shader;
+   drawPlants(project, modelview, normal, current);
 
    //  Unset shader
    glUseProgram(0);
@@ -366,6 +429,26 @@ int CreateShaderProgTess(void)
    return prog;
 }
 
+int CreateShaderProgTessGrass(void)
+{
+   //  Create program
+   int prog = glCreateProgram();
+   //  Compile shaders
+   CreateShader(prog,GL_VERTEX_SHADER         ,"plants.vert");
+   CreateShader(prog,GL_TESS_CONTROL_SHADER   ,"plants.tcs");
+   CreateShader(prog,GL_TESS_EVALUATION_SHADER,"plants.tes");
+   CreateShader(prog,GL_GEOMETRY_SHADER       ,"plants.geom");
+   CreateShader(prog,GL_FRAGMENT_SHADER       ,"plants.frag");
+   //  Associate Position with VBO
+   glBindAttribLocation(prog,Position0,"Position");
+   //  Link program
+   glLinkProgram(prog);
+   //  Check for errors
+   PrintProgramLog(prog);
+   //  Return name
+   return prog;
+}
+
 static void CreatePlane()
 {
     unsigned int verts0, verts1, faces0,faces1;
@@ -465,6 +548,7 @@ int main(int argc,char* argv[])
    glActiveTexture(GL_TEXTURE0);
 
    terrain_shader = CreateShaderProgTess();
+   plant_shader = CreateShaderProgTessGrass();
    water_shader = CreateShaderProg("water_surf.vert","water_surf.frag");
    default_shader = CreateShaderProg("Qt/Aldranor.vert", "Qt/Aldranor.frag");
 

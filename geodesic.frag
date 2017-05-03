@@ -15,11 +15,6 @@ uniform mat4 Modelview;
 //Time
 uniform int time;
 
-//  Normal
-in  vec3  gFacetNormal;
-//  Distance to edge of patch and triange
-in  vec3  gTriDistance;
-in  vec3  gPatchDistance;
 //Lighting
 in vec3 gLight;
 in vec3 gView;
@@ -49,7 +44,7 @@ vec4 blinn()
 {
    //  N is the object normal
    vec3 N;
-   if(isGrass == 0) N = getNormal(); //normalize(gFacetNormal);
+   if(isGrass == 0) N = getNormal();
    else N = normalize(grassNormal);
    //  L is the light vector
    vec3 L = normalize(gLight); //light position - modelview*object vertex
@@ -57,8 +52,8 @@ vec4 blinn()
    vec3 V = normalize(gView);
 
    //Settings
-   float La = 0.3;
-   float Ld = 1.0;
+   float La = 0.7;
+   float Ld = 0.7;
    float Ls = 0.001;
    vec4 Ambient = vec4(La,La,La,1.0);
    vec4 Diffuse = vec4(Ld,Ld,Ld,1.0);
@@ -93,12 +88,19 @@ void main()
       vec4 texColor = texture2D(grassTex, gTexCoord);
       vec4 grassColor = blinn() * texColor;
       if(texColor.r > 0.9) grassColor.w = 0.0;
-      FragColor = vec4(1.0,0,0,1);//grassColor;
+      FragColor = grassColor;
    } else {
      //Calculate distortion
      if(gObjVert.y < -1.0){
         vec2 distCoords = vec2(gTexCoord.x+0.002*sin(gTexCoord.y*300+0.3*time), gTexCoord.y+0.002*sin(gTexCoord.x*300+0.5*time));
-        FragColor = blinn()*texture2D(groundTex, distCoords);
+
+        //Fog
+        vec4 fogColor = vec4(0,0,0,1);
+        float dEnd = -4; //depth at which fog is complete in world coordinates
+        float dStart = -1.0; //depth at which fog begins, at the water's surface
+        float f = (dEnd - gObjVert.y)/(dEnd - dStart);
+        vec4 allColor = blinn()*texture2D(groundTex, distCoords);
+        FragColor = f*allColor + (1-f)*fogColor;
      } else {
         FragColor = blinn() * texture2D(groundTex,gTexCoord); //vec4(color, 1.0);
      }
